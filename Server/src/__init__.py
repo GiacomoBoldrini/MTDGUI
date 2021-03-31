@@ -25,6 +25,10 @@ def createApp():
     def hello():
         print("A client connected!")
 
+    @socketio.on('receive')
+    def sendmessage():
+        socketio.emit('receive', {'message': 'Eureka!'})
+
     @socketio.on('disconnect')
     def hello():
         print("A client disconnected!")

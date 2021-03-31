@@ -3,6 +3,8 @@
     <div class="title">
       <h1>Service Keys</h1>
       <button v-on:click="testing">Test socket!</button>
+      <button v-on:click="request">Receive from server!</button>
+      <p v-if=didReceived> {{ received_m }} </p>
     </div>
   </div>
 </template>
@@ -17,6 +19,8 @@ export default {
       socket: io("http://127.0.0.1:5000/", {
         transports: ["websocket"],
       }),
+      didReceived: false,
+      received_m: "",
     };
   },
   methods: {
@@ -25,10 +29,18 @@ export default {
       this.socket.emit(
         "testing", { message: "Ciaone mi chiamo Giacomo, Web development è un casino" });
     },
+    request() {
+      console.log("Receive from server...");
+      this.socket.emit("receive");
+    },
   },
   mounted() {
     this.socket.on("connect", () => {
       console.log("Hey!");
+    });
+    this.socket.on("receive", (socket) => {
+      this.received_m = socket.message;
+      this.didReceived = true;
     });
   },
 };
