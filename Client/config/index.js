@@ -10,7 +10,22 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      // proxy all requests starting with /api to jsonplaceholder
+      // Explicit connection to backend server
+      // http://vuejs-templates.github.io/webpack/proxy.html
+      '/api': {
+        target: 'http://localhost:5000/',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': '/api'
+        }
+      },
+      '/socket.io': {
+        target: "ws://localhost:5000",
+        ws: true
+      }
+    },
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
