@@ -10,28 +10,16 @@ def createApp():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "FCVG6578BHJNKMLJHGF5678"
 
+    from .routes import router
+    app.register_blueprint(router,url_prefix="/api")
+
+
     #define blueprints before init app 
     socketio.init_app(app)
 
     @app.route("/")
     def home():
         return {"message": "Hello World!"}, 200
-
-    @socketio.on('testing')
-    def test(data, methods=['GET', 'POST']):
-        print(data['message'])
-
-    @socketio.on('connect')
-    def hello():
-        print("A client connected!")
-
-    @socketio.on('receive')
-    def sendmessage():
-        socketio.emit('receive', {'message': 'Eureka!'})
-
-    @socketio.on('disconnect')
-    def hello():
-        print("A client disconnected!")
 
     return app
 
