@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, send_from_directory
 from flask_socketio import SocketIO
 import os
 
@@ -7,7 +7,7 @@ socketio = SocketIO(logger=True, engineio_logger=True, cors_allowed_origins='htt
 
 def createApp():
     
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path='')
     app.config["SECRET_KEY"] = "FCVG6578BHJNKMLJHGF5678"
 
     from .routes import router
@@ -16,10 +16,11 @@ def createApp():
 
     #define blueprints before init app 
     socketio.init_app(app)
+    #, async_mode='threading'
 
     @app.route("/")
     def home():
-        return {"message": "Hello World!"}, 200
+        return {'msg': 'ciao'}
 
     return app
 

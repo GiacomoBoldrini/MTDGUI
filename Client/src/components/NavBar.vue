@@ -3,7 +3,7 @@
     <router-link to="/vue" class="navbar-item" active-class="is-active"
       >Vue</router-link
     >
-    <router-link to="/webgui-main" class="navbar-item" active-class="is-active"
+    <router-link to="/webgui" class="navbar-item" active-class="is-active"
       >Web GUI</router-link
     >
     <router-link to="/dqm" class="navbar-item" active-class="is-active"

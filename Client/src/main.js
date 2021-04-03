@@ -6,7 +6,7 @@ import Vue from "vue";
 // import io from "socket.io-client";
 // import VueSocketIOExt from "vue-socket.io-extended";
 
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
+import { BootstrapVue, IconsPlugin, BootstrapVueIcons } from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 
@@ -17,6 +17,7 @@ import router from "./router";
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
+Vue.use(BootstrapVueIcons);
 
 // const socket = io("http://127.0.0.1:5000/");
 // Vue.use(VueSocketIOExt, socket);

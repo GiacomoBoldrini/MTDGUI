@@ -3,10 +3,12 @@ import Router from "vue-router";
 import HelloWorld from "@/components/HelloWorld";
 import Service from "@/components/services";
 import RunKeys from "@/components/runkeys";
+import WebGui from "@/components/webgui";
 
 Vue.use(Router);
 
 export default new Router({
+  mode: "history",
   routes: [
     {
       path: "/vue",
@@ -22,6 +24,11 @@ export default new Router({
       path: "/runconf",
       name: "runkeys",
       component: RunKeys,
+    },
+    {
+      path: "/webgui",
+      name: "webgui",
+      component: WebGui,
     },
   ],
 });
