@@ -13,6 +13,9 @@ import "bootstrap-vue/dist/bootstrap-vue.css";
 
 import App from "./App";
 import router from "./router";
+import Graph from "./components/BarChart";
+
+Vue.component("graph-chart", Graph);
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);

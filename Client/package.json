@@ -14,14 +14,20 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "@statnett/vue-plotly": "^0.3.2",
     "axios": "^0.21.1",
     "bootstrap": "^5.0.0-beta3",
     "bootstrap-vue": "^2.21.2",
     "chart.js": "^2.9.4",
+    "ify-loader": "^1.1.0",
     "jquery": "^3.6.0",
+    "jsroot": "^6.0.1",
+    "plotly.js": "^1.58.4",
     "popper.js": "^1.16.1",
     "socket.io-client": "^4.0.0",
     "vue": "^2.5.2",
+    "vue-chartjs": "^3.5.1",
+    "vue-plotly": "^1.1.0",
     "vue-router": "^3.0.1",
     "vue-socket.io": "^3.0.10",
     "vue-socket.io-extended": "^4.1.0"

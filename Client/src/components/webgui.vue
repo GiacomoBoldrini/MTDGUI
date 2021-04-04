@@ -7,46 +7,21 @@
       <div class="jumbotron jumbotron-fluid">
         <div class="container">
           <hr />
-          Statistics
-          <div class="accordion" role="tablist">
-            <b-card no-body class="mb-1">
-              <b-card-header header-tag="header" class="p-1" role="tab">
-                <b-button block v-b-toggle.accordion-1 variant="info"
-                  >Logs</b-button
-                >
-              </b-card-header>
-              <b-collapse
-                id="accordion-1"
-                visible
-                accordion="my-accordion"
-                role="tabpanel"
-              >
-                <b-card-body>
+          <div>
+            <b-card no-body>
+              <b-tabs card>
+                <b-tab title="Log" active>
                   <div class="log-overflow">
                     <b-card-text v-for="(log, index) in logs" :key="index">
                       <span class="logaction">{{ log.action }}: </span>
                       <span class="logbody">{{ log.body }} </span>
                     </b-card-text>
                   </div>
-                </b-card-body>
-              </b-collapse>
-            </b-card>
-
-            <b-card no-body class="mb-1">
-              <b-card-header header-tag="header" class="p-1" role="tab">
-                <b-button block v-b-toggle.accordion-2 variant="info"
-                  >Plots</b-button
-                >
-              </b-card-header>
-              <b-collapse
-                id="accordion-2"
-                accordion="my-accordion"
-                role="tabpanel"
-              >
-                <b-card-body>
-                  <b-card-text> ciao </b-card-text>
-                </b-card-body>
-              </b-collapse>
+                </b-tab>
+                <b-tab title="Plots">
+                  <div id="thePlot"></div>
+                </b-tab>
+              </b-tabs>
             </b-card>
           </div>
         </div>
@@ -143,9 +118,8 @@
 import io from "socket.io-client";
 import axios from "axios";
 
-
 export default {
-  name: "services",
+  name: "webgui",
   data() {
     return {
       socket: io("http://127.0.0.1:5000/", {
@@ -166,21 +140,24 @@ export default {
       runConfig: {},
       paused: false,
       logs: [],
+
+      // for the graph
+      datacollection: [1, 2, 3, 4, 5],
     };
   },
   methods: {
     statCheck(idx) {
       const style =
-        this.actions[this.currentStatus].value > idx ||
-        this.actions[this.currentStatus].value === 5
+        this.actions[this.currentStatus - 1].value >= idx ||
+        this.actions[this.currentStatus - 1].value === 5
           ? "success"
           : "warning";
       return style;
     },
     statDisable(idx) {
       return (
-        this.actions[this.currentStatus].value > idx ||
-        this.actions[this.currentStatus].value === 5
+        this.actions[this.currentStatus - 1].value >= idx ||
+        this.actions[this.currentStatus - 1].value === 5
       );
     },
     get_services_from_db() {
@@ -231,7 +208,7 @@ export default {
       this.logs.unshift({
         action: "Status",
         body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus].actionName
+          this.actions[this.currentStatus - 1].actionName
         }`,
       });
     },
@@ -240,32 +217,42 @@ export default {
       this.logs.unshift({
         action: "Status",
         body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus].actionName
+          this.actions[this.currentStatus - 1].actionName
         }`,
       });
     },
     updatePause() {
       console.log("Paused!");
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus].actionName
-        }`,
-      });
-      if (!this.paused) {
-        this.actions[3].actionName = "Resume";
-      } else {
+      console.log(this.currentStatus);
+      if (this.paused) {
+        console.log("Sono in paused");
         this.actions[3].actionName = "Pause";
+        this.currentStatus -= 1;
+        this.logs.unshift({
+          action: "Status",
+          body: `Machine status ${this.currentStatus} ${
+            this.actions[this.currentStatus - 1].actionName
+          }`,
+        });
+      } else {
+        console.log("Sono nell'altro");
+        this.actions[3].actionName = "Resume";
+        this.currentStatus += 1;
+        this.logs.unshift({
+          action: "Status",
+          body: `Machine status ${this.currentStatus} Paused`,
+        });
       }
+
       this.paused = !this.paused;
     },
     updateStop() {
       console.log("Stopped!");
-      this.currentStatus = 4;
+      this.currentStatus = 5;
       this.logs.unshift({
         action: "Status",
         body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus].actionName
+          this.actions[this.currentStatus - 1].actionName
         }`,
       });
     },
@@ -274,7 +261,7 @@ export default {
       this.logs.unshift({
         action: "Status",
         body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus].actionName
+          this.actions[this.currentStatus - 1].actionName
         }`,
       });
     },
@@ -302,12 +289,14 @@ export default {
       return this.currentStatus !== 2;
     },
     isPauseDis() {
+      console.log("IsPauseDis");
       return (
-        this.currentStatus <= 2 || this.actions[this.currentStatus].value === 5
+        this.currentStatus <= 2 ||
+        this.actions[this.currentStatus - 1].value === 5
       );
     },
     isRestartDis() {
-      return this.currentStatus !== 4;
+      return this.currentStatus !== 5;
     },
   },
   mounted() {
@@ -321,7 +310,17 @@ export default {
 
     this.get_services_from_db();
     this.get_run_from_db();
-    this.currentStatus += 1;
+
+    // Check  if initialization succeded
+    if (true) {
+      this.currentStatus += 1;
+      this.logs.unshift({
+        action: "Status",
+        body: `Machine status ${this.currentStatus} ${
+          this.actions[this.currentStatus - 1].actionName
+        }`,
+      });
+    }
   },
 };
 </script>
@@ -331,12 +330,14 @@ export default {
   width: 50%;
   height: 100%;
   float: left;
+  padding-right: 2%;
   border-collapse: collapse;
 }
 
 .rightpane {
   width: 50%;
   height: 100%;
+  padding-left: 2%;
   position: relative;
   float: right;
   border-collapse: collapse;
