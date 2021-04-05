@@ -19,7 +19,9 @@
                   </div>
                 </b-tab>
                 <b-tab title="Plots">
-                  <div id="thePlot"></div>
+                  <div class="log-overflow">
+                    <bar-chart />
+                  </div>
                 </b-tab>
               </b-tabs>
             </b-card>
@@ -117,9 +119,13 @@
 <script>
 import io from "socket.io-client";
 import axios from "axios";
+import BarChart from "./BarChart";
 
 export default {
   name: "webgui",
+  components: {
+    BarChart,
+  },
   data() {
     return {
       socket: io("http://127.0.0.1:5000/", {
@@ -310,7 +316,8 @@ export default {
 
     this.get_services_from_db();
     this.get_run_from_db();
-
+  },
+  created() {
     // Check  if initialization succeded
     if (true) {
       this.currentStatus += 1;
@@ -352,7 +359,7 @@ export default {
 }
 
 .log-overflow {
-  max-height: 20rem;
+  max-height: 30rem;
   overflow-y: auto;
 }
 

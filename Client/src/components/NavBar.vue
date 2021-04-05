@@ -1,24 +1,28 @@
 <template>
-  <nav class="navbar-is-link" role="navigation" aria-label="main navigation">
-    <router-link to="/vue" class="navbar-item" active-class="is-active"
-      >Vue</router-link
-    >
-    <router-link to="/webgui" class="navbar-item" active-class="is-active"
-      >Web GUI</router-link
-    >
-    <router-link to="/dqm" class="navbar-item" active-class="is-active"
-      >DQM</router-link
-    >
-    <router-link to="/runreg" class="navbar-item" active-class="is-active"
-      >Run Registry</router-link
-    >
-    <router-link to="/service" class="navbar-item" active-class="is-active"
-      >Services</router-link
-    >
-    <router-link to="/runconf" class="navbar-item" active-class="is-active"
-      >RunKeys</router-link
-    >
-  </nav>
+  <div>
+    <nav class="navbar-is-link" role="navigation" aria-label="main navigation">
+      <router-link to="/vue" class="navbar-item" active-class="is-active"
+        >Vue</router-link
+      >
+      <router-link to="/webgui" class="navbar-item">Web GUI</router-link>
+      <router-link to="/dqm" class="navbar-item" active-class="is-active"
+        >DQM</router-link
+      >
+      <router-link to="/runreg" class="navbar-item" active-class="is-active"
+        >Run Registry</router-link
+      >
+      <router-link to="/service" class="navbar-item" active-class="is-active"
+        >Services</router-link
+      >
+      <router-link to="/runconf" class="navbar-item" active-class="is-active"
+        >RunKeys</router-link
+      >
+    </nav>
+
+    <keep-alive include="webgui">
+      <router-view></router-view>
+    </keep-alive>
+  </div>
 </template>
 
 <script>
