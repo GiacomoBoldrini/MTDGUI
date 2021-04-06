@@ -4,6 +4,7 @@ import HelloWorld from "@/components/HelloWorld";
 import Service from "@/components/services";
 import RunKeys from "@/components/runkeys";
 import WebGui from "@/components/webgui";
+import Dqm from "@/components/dqm";
 
 Vue.use(Router);
 
@@ -29,6 +30,11 @@ export default new Router({
       path: "/webgui",
       name: "webgui",
       component: WebGui,
+    },
+    {
+      path: "/dqm",
+      name: "dqm",
+      component: Dqm,
     },
   ],
 });

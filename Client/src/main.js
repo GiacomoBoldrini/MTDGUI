@@ -13,7 +13,7 @@ import "bootstrap-vue/dist/bootstrap-vue.css";
 
 import App from "./App";
 import router from "./router";
-import Graph from "./components/BarChart";
+import Graph from "./components/dqm";
 
 Vue.component("graph-chart", Graph);
 

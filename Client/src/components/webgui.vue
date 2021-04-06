@@ -20,7 +20,7 @@
                 </b-tab>
                 <b-tab title="Plots">
                   <div class="log-overflow">
-                    <bar-chart />
+                    <graph-chart />
                   </div>
                 </b-tab>
               </b-tabs>
@@ -119,13 +119,13 @@
 <script>
 import io from "socket.io-client";
 import axios from "axios";
-import BarChart from "./BarChart";
+// import BarChart from "./BarChart";
 
 export default {
   name: "webgui",
-  components: {
-    BarChart,
-  },
+  // components: {
+  //   BarChart,
+  // },
   data() {
     return {
       socket: io("http://127.0.0.1:5000/", {
