@@ -4,9 +4,11 @@ from flask import request
 from . import socketio
 from bs4 import BeautifulSoup as Soup
 from .DBManager import DBMan
+from src.Controller import GuiController
 
 router = Blueprint("router", __name__)
 dbman = DBMan()
+run_control = GuiController(socketio)
 
 # Standard socket connection and disconnection of clients
 clients = 0
@@ -94,4 +96,50 @@ def put_run():
         return jsonify({"msg":"successful deletion of the entry"}), 200
     else:
         return jsonify({"msg":"could not delete entry in db"}), 500
+    
+    
+    
+# Gui controlled actions
 
+@router.route('/actions/initialize',methods=['POST'])
+def initialize():
+    result, msg = run_control.initialize()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/configure',methods=['POST'])
+def configure():
+    params = request.get_json(force=True)
+    result, msg = run_control.configure(params)
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/start',methods=['POST'])
+def start():
+    result, msg = run_control.start()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/stop',methods=['POST'])
+def stop():
+    result, msg = run_control.stop()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/pause',methods=['POST'])
+def pause():
+    result, msg = run_control.pause()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/resume',methods=['POST'])
+def resume():
+    result, msg = run_control.resume()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+@router.route('/actions/restart',methods=['POST'])
+def restart():
+    result, msg = run_control.restart()
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})

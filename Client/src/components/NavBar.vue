@@ -1,22 +1,12 @@
 <template>
   <div>
     <nav class="navbar-is-link" role="navigation" aria-label="main navigation">
-      <router-link to="/vue" class="navbar-item" active-class="is-active"
-        >Vue</router-link
-      >
+      <router-link to="/vue" class="navbar-item">Vue</router-link>
       <router-link to="/webgui" class="navbar-item">Web GUI</router-link>
-      <router-link to="/dqm" class="navbar-item" active-class="is-active"
-        >DQM</router-link
-      >
-      <router-link to="/runreg" class="navbar-item" active-class="is-active"
-        >Run Registry</router-link
-      >
-      <router-link to="/service" class="navbar-item" active-class="is-active"
-        >Services</router-link
-      >
-      <router-link to="/runconf" class="navbar-item" active-class="is-active"
-        >RunKeys</router-link
-      >
+      <router-link to="/dqm" class="navbar-item">DQM</router-link>
+      <router-link to="/runreg" class="navbar-item">Run Registry</router-link>
+      <router-link to="/service" class="navbar-item">Services</router-link>
+      <router-link to="/runconf" class="navbar-item">RunKeys</router-link>
     </nav>
 
     <keep-alive include="webgui">
@@ -35,19 +25,38 @@ export default {
 <style>
 .navbar-is-link {
   background-color: #1e90ff;
-  margin: auto;
-  margin-top: 0%;
-  padding: 1%;
-  display: flex;
-  justify-content: space-between;
+  height: 50px;
 }
 
 .navbar-item {
+  float: left;
+  padding: 12px;
   color: white;
-  padding-left: 5%;
-  padding-right: 5%;
-  position: relative;
-  display: flex;
   text-decoration: none;
+  font-size: 17px;
+  width: 16%;
+  text-align: center;
+  color: white;
+}
+
+.navbar-item:hover {
+  color: #1e90ff;
+  background-color: white;
+  text-align: center;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  justify-content: space-between;
+}
+
+.router-link-exact-active,
+.router-link-active {
+  color: #1e90ff;
+  background-color: white;
+  text-align: center;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  justify-content: space-between;
 }
 </style>

@@ -30,10 +30,16 @@
       </div>
     </div>
     <div class="rightpane">
-      <div class="status">
+      <div class="error-container" v-if="currentStatus === 7">
+        <div class="blink">
+          <b-badge variant="danger" class="errorbadge">ERROR</b-badge>
+        </div>
+      </div>
+      <div class="status" v-if="currentStatus !== 0">
         <b-button-group size="lg">
           <b-button
-            v-for="(action, index) in actions"
+            class="PrimaryButtons"
+            v-for="(action, index) in actions.slice(0, -1)"
             :key="action.value"
             :variant="statCheck(action.value)"
             :disabled="statDisable(action.value)"
@@ -86,21 +92,24 @@
           variant="warning"
           :disabled="isRunDis"
           @click="updateRunning"
-          >{{ actions[2].actionName }}</b-button
+          >Run</b-button
         >
         <b-button
           class="console"
           variant="warning"
           :disabled="isPauseDis"
           @click="updatePause"
-          >{{ actions[3].actionName }}</b-button
+          >{{ paused }}</b-button
         >
         <b-button
           class="console"
           variant="warning"
           :disabled="isPauseDis"
           @click="updateStop"
-          >{{ actions[4].actionName }}</b-button
+          >Stop</b-button
+        >
+        <b-button class="console" variant="warning" @click="currentStatus = 7"
+          >Toogle error</b-button
         >
       </div>
       <div class="configurations">
@@ -137,14 +146,16 @@ export default {
         { actionName: "Configured", value: 2 },
         { actionName: "Run", value: 3 },
         { actionName: "Pause", value: 4 },
-        { actionName: "Stop", value: 5 },
+        { actionName: "Resume", value: 5 },
+        { actionName: "Stop", value: 6 },
+        { actionName: "Error", value: 7 },
       ],
       runkeys: [],
       services: [],
       chose_service: "",
       chose_run: "",
       runConfig: {},
-      paused: false,
+      paused: "Pause",
       logs: [],
 
       // for the graph
@@ -152,19 +163,21 @@ export default {
     };
   },
   methods: {
+    addLog(theaction, themsg) {
+      this.logs.unshift({
+        action: theaction,
+        body: themsg,
+      });
+    },
     statCheck(idx) {
       const style =
-        this.actions[this.currentStatus - 1].value >= idx ||
-        this.actions[this.currentStatus - 1].value === 5
+        this.actions[this.currentStatus - 1].value >= idx
           ? "success"
           : "warning";
       return style;
     },
     statDisable(idx) {
-      return (
-        this.actions[this.currentStatus - 1].value >= idx ||
-        this.actions[this.currentStatus - 1].value === 5
-      );
+      return this.actions[this.currentStatus - 1].value >= idx;
     },
     get_services_from_db() {
       console.log("Sent request to see db instances...");
@@ -172,10 +185,7 @@ export default {
         this.services = JSON.parse(r.data.service_list);
         this.chose_service = this.services[0];
         this.msg = r.data.msg;
-      });
-      this.logs.unshift({
-        action: "DBQuery",
-        body: "Queried service database",
+        this.addLog("DBQuery", "Queried service database");
       });
     },
     get_run_from_db() {
@@ -184,92 +194,78 @@ export default {
         this.runkeys = JSON.parse(r.data.run_list);
         this.chose_run = this.runkeys[0];
         this.msg = r.data.msg;
-        this.logs.unshift({
-          action: "DBQuery",
-          body: "Queried runkeys database",
-        });
+        this.addLog("DBQuery", "Queried run database");
       });
     },
     updateService(service) {
       this.chose_service = service;
-      this.logs.unshift({
-        action: "Selection",
-        body: `Selected service ${this.chose_service.name}`,
-      });
+      this.addLog("Selection", `Selected service ${this.chose_service.name}`);
     },
     updateRun(run) {
       this.chose_run = run;
-      this.logs.unshift({
-        action: "Selection",
-        body: `Selected runkey ${this.chose_run.name}`,
+      this.addLog("Selection", `Selected runkey ${this.chose_run.name}`);
+    },
+    updateInitialize() {
+      axios.post("/api/actions/initialize").then((r) => {
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Initialize", this.msg);
       });
     },
     updateConfigurations() {
       this.runConfig = { service: this.chose_service, runkey: this.chose_run };
-      this.currentStatus += 1;
-      this.logs.unshift({
-        action: "Selection",
-        body: `Finalyzed configuration service ${this.chose_service.name} runkey ${this.chose_run.name}`,
-      });
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus - 1].actionName
-        }`,
+      this.addLog(
+        "Selection",
+        `Finalyzed configuration service ${this.chose_service.name} runkey ${this.chose_run.name}`,
+      );
+      axios.post("/api/actions/configure", this.runConfig).then((r) => {
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Configure", this.msg);
       });
     },
     updateRunning() {
-      this.currentStatus += 1;
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus - 1].actionName
-        }`,
+      axios.post("/api/actions/start").then((r) => {
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Running", this.msg);
       });
     },
     updatePause() {
       console.log("Paused!");
       console.log(this.currentStatus);
-      if (this.paused) {
-        console.log("Sono in paused");
-        this.actions[3].actionName = "Pause";
-        this.currentStatus -= 1;
-        this.logs.unshift({
-          action: "Status",
-          body: `Machine status ${this.currentStatus} ${
-            this.actions[this.currentStatus - 1].actionName
-          }`,
+      if (this.paused === "Pause") {
+        axios.post("/api/actions/pause", this.runConfig).then((r) => {
+          this.currentStatus = r.data.newstate;
+          this.msg = r.data.msg;
+          this.paused = "Resume";
+          this.addLog("Pause", this.msg);
         });
       } else {
-        console.log("Sono nell'altro");
-        this.actions[3].actionName = "Resume";
-        this.currentStatus += 1;
-        this.logs.unshift({
-          action: "Status",
-          body: `Machine status ${this.currentStatus} Paused`,
+        axios.post("/api/actions/resume", this.runConfig).then((r) => {
+          this.currentStatus = r.data.newstate;
+          this.msg = r.data.msg;
+          this.paused = "Pause";
+          this.addLog("Resumed", this.msg);
         });
       }
-
-      this.paused = !this.paused;
     },
     updateStop() {
-      console.log("Stopped!");
-      this.currentStatus = 5;
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus - 1].actionName
-        }`,
+      axios.post("/api/actions/stop").then((r) => {
+        console.log(r.data.newstate);
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Stop", this.msg);
       });
     },
     updateRestart() {
-      this.currentStatus = 1;
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus - 1].actionName
-        }`,
+      axios.post("/api/actions/restart").then((r) => {
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Restart", this.msg);
       });
+
+      this.updateInitialize();
     },
     executeButton(idx) {
       if (idx === 1) {
@@ -298,16 +294,17 @@ export default {
       console.log("IsPauseDis");
       return (
         this.currentStatus <= 2 ||
-        this.actions[this.currentStatus - 1].value === 5
+        this.actions[this.currentStatus - 1].value === 6
       );
     },
     isRestartDis() {
-      return this.currentStatus !== 5;
+      return 1 === 2;
+      // return this.currentStatus !== 5;
     },
   },
   mounted() {
     this.socket.on("connect", () => {
-      console.log("Hey!");
+      console.log("Connected!");
     });
     this.socket.on("receive", (socket) => {
       this.received_m = socket.message;
@@ -318,16 +315,17 @@ export default {
     this.get_run_from_db();
   },
   created() {
+    console.log("created");
     // Check  if initialization succeded
-    if (true) {
-      this.currentStatus += 1;
-      this.logs.unshift({
-        action: "Status",
-        body: `Machine status ${this.currentStatus} ${
-          this.actions[this.currentStatus - 1].actionName
-        }`,
-      });
-    }
+    this.updateInitialize();
+    // Send messsage to server when refrashing or closing the browser
+    window.addEventListener(
+      "beforeunload",
+      () => {
+        this.updateRestart();
+      },
+      false,
+    );
   },
 };
 </script>
@@ -411,6 +409,22 @@ export default {
   justify-content: center;
 }
 
+.error-container {
+  display: flex;
+  justify-content: center;
+}
+
+.errorbadge {
+  color: #ff0000;
+  background-color: white;
+  border-color: #bb0707;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 2px;
+  height: 35px;
+  width: 20rem;
+}
+
 .m-2 {
   height: 35px;
 }
@@ -418,8 +432,59 @@ export default {
 .console {
   margin-left: 1%;
   width: 10rem;
-  border-style: solid;
-  border-width: 2px;
-  border-color: red;
+}
+
+button:hover {
+  border: 1px solid #0099cc;
+  background-color: #00aacc;
+  color: #ffffff;
+  padding: 5px 10px;
+}
+
+.PrimaryButtons {
+  pointer-events: none;
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}
+
+.PrimaryButtons:disabled,
+.PrimaryButtons[disabled] {
+  border: 1px solid #556b2f;
+  background-color: #228b22;
+  color: white;
+}
+
+.blink {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.btn-group,
+.btn-group-vertical {
+  position: relative;
+  display: block;
+}
+
+/* Media shrinking */
+@media only screen and (min-width: 0px) and (max-width: 600px) {
+  .leftpane {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-collapse: collapse;
+  }
+
+  .rightpane {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-collapse: collapse;
+  }
 }
 </style>
