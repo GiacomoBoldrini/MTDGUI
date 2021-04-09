@@ -3,6 +3,8 @@
     <section class="but-col">
       <div>Console</div>
       <div>
+        <b-button variant="primary" @click="startDummy">Start</b-button>
+        <b-button variant="primary" @click="stopDummy">Stop</b-button>
         <b-button-group>
           <b-button variant="primary" @click="setNCols(1)">1</b-button>
           <b-button variant="primary" @click="setNCols(2)">2</b-button>
@@ -32,6 +34,7 @@
 
 <script>
 import { Plotly } from "vue-plotly";
+import io from "socket.io-client";
 
 const x = [];
 for (let i = 0; i < 500; i += 1) {
@@ -57,15 +60,22 @@ export default {
               type: "histogram",
               xbins: {
                 end: 1,
-                size: 0.01,
+                size: 0.1,
                 start: 0.0,
+              },
+              marker: {
+                color: "grey",
+                // line: {
+                //   color: "blue",
+                //   width: 1,
+                // },
+              },
+              error_y: {
+                visible: true,
+                type: "sqrt",
               },
             },
           ],
-          marker_color: "green",
-          marker: {
-            color: "green",
-          },
           layout: {
             title: "ciao",
             nbins: 10,
@@ -94,9 +104,16 @@ export default {
               x: [],
               type: "histogram",
               xbins: {
-                end: 1,
-                size: 0,
-                start: 0.1,
+                end: 3,
+                size: 0.2,
+                start: -3,
+              },
+              marker: {
+                color: "grey",
+              },
+              error_y: {
+                visible: true,
+                type: "sqrt",
               },
             },
           ],
@@ -169,25 +186,45 @@ export default {
       vals[idx] = theval;
       this.the_vals = vals;
     },
-    setX() {
-      for (let z = 0; z < 2; z += 1) {
-        const xs = [];
-        for (let i = 0; i < 500; i += 1) {
-          xs[i] = Math.random();
-        }
-        const vals = this.the_vals;
-        vals[z].values[0].x = xs;
-        this.the_vals = vals;
-      }
+    startDummy() {
+      this.socket.emit("sendData");
     },
-    start() {
-      // setInterval(this.setX, 2000);
-      this.setX();
+    stopDummy() {
+      this.socket.emit("stopData");
     },
   },
-  mounted() {
+  created() {
+    this.socket = io("http://127.0.0.1:5000");
     console.log("mounted graphs");
-    this.start();
+    this.socket.on("connect", () => {
+      console.log("Hey!");
+    });
+    this.socket.on("receiveData", (data) => {
+      const vals = this.the_vals;
+
+      let idx = data.updates[0].index;
+      let v = data.updates[0].values;
+
+      vals[idx].values[0].x = v;
+
+      idx = data.updates[1].index;
+      v = data.updates[1].values;
+
+      vals[idx].values[0].x = v;
+
+      this.the_vals = vals;
+      console.log("Updated graphs...");
+    });
+    this.socket.on("updateSockets", (data) => {
+      console.log(data);
+    });
+    this.socket.on("updatePlots", () => {
+      const vals = this.the_vals;
+      for (let i = 0; i < vals.length; i += 1) {
+        vals[i].values[0].x = [];
+      }
+      this.the_vals = vals;
+    });
   },
 };
 </script>

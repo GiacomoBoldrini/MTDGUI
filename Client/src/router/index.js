@@ -33,7 +33,7 @@ export default new Router({
     },
     {
       path: "/dqm",
-      name: "dqm",
+      name: "Dqm",
       component: Dqm,
     },
   ],

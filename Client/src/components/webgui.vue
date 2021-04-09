@@ -216,7 +216,7 @@ export default {
       this.runConfig = { service: this.chose_service, runkey: this.chose_run };
       this.addLog(
         "Selection",
-        `Finalyzed configuration service ${this.chose_service.name} runkey ${this.chose_run.name}`,
+        `Finalyzed configuration service ${this.chose_service.name} runkey ${this.chose_run.name}`
       );
       axios.post("/api/actions/configure", this.runConfig).then((r) => {
         this.currentStatus = r.data.newstate;
@@ -230,6 +230,7 @@ export default {
         this.msg = r.data.msg;
         this.addLog("Running", this.msg);
       });
+      this.socket.emit("sendData");
     },
     updatePause() {
       console.log("Paused!");
@@ -241,6 +242,7 @@ export default {
           this.paused = "Resume";
           this.addLog("Pause", this.msg);
         });
+        this.socket.emit("stopData");
       } else {
         axios.post("/api/actions/resume", this.runConfig).then((r) => {
           this.currentStatus = r.data.newstate;
@@ -248,6 +250,7 @@ export default {
           this.paused = "Pause";
           this.addLog("Resumed", this.msg);
         });
+        this.socket.emit("sendData");
       }
     },
     updateStop() {
@@ -257,6 +260,7 @@ export default {
         this.msg = r.data.msg;
         this.addLog("Stop", this.msg);
       });
+      this.socket.emit("stopData");
     },
     updateRestart() {
       axios.post("/api/actions/restart").then((r) => {
@@ -264,7 +268,6 @@ export default {
         this.msg = r.data.msg;
         this.addLog("Restart", this.msg);
       });
-
       this.updateInitialize();
     },
     executeButton(idx) {
@@ -294,7 +297,8 @@ export default {
       console.log("IsPauseDis");
       return (
         this.currentStatus <= 2 ||
-        this.actions[this.currentStatus - 1].value === 6
+        this.actions[this.currentStatus - 1].value === 6 ||
+        this.actions[this.currentStatus - 1].value === 7
       );
     },
     isRestartDis() {
@@ -324,7 +328,7 @@ export default {
       () => {
         this.updateRestart();
       },
-      false,
+      false
     );
   },
 };
@@ -472,7 +476,7 @@ button:hover {
 }
 
 /* Media shrinking */
-@media only screen and (min-width: 0px) and (max-width: 600px) {
+@media only screen and (min-width: 0px) and (max-width: 800px) {
   .leftpane {
     width: 100%;
     height: 100%;

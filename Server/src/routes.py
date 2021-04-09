@@ -5,6 +5,7 @@ from . import socketio
 from bs4 import BeautifulSoup as Soup
 from .DBManager import DBMan
 from src.Controller import GuiController
+import numpy as np
 
 router = Blueprint("router", __name__)
 dbman = DBMan()
@@ -25,7 +26,25 @@ def disconnect():
     clients -= 1
     print("CLIENTS ", clients)
     socketio.emit('updateSockets', {"clients": clients})
+    
+# DQM
 
+should_run = True
+@socketio.on("sendData", namespace="/")
+def dummyData():
+    import time
+    global should_run
+    should_run = True
+    while(should_run):
+        uniform = (np.random.uniform(0, 1, 1000)).tolist()  #uniform
+        normal = (np.random.standard_normal(1000)).tolist() #normal 
+        socketio.emit('receiveData', {"updates": [{"index": 0, "values": uniform}, {"index": 1, "values": normal}]})
+        socketio.sleep(1)
+        
+@socketio.on("stopData", namespace="/")
+def stopData():
+    global should_run
+    should_run = False
 
 # DB Actions Service
 
@@ -141,5 +160,8 @@ def resume():
 @router.route('/actions/restart',methods=['POST'])
 def restart():
     result, msg = run_control.restart()
+    socketio.emit("updatePlots")
     #socketio.emit('updateAll')
     return jsonify({"newstate":result, "msg":msg})
+
+    

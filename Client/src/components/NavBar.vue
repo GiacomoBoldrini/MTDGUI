@@ -1,23 +1,37 @@
 <template>
   <div>
-    <nav class="navbar-is-link" role="navigation" aria-label="main navigation">
-      <router-link to="/vue" class="navbar-item">Vue</router-link>
-      <router-link to="/webgui" class="navbar-item">Web GUI</router-link>
-      <router-link to="/dqm" class="navbar-item">DQM</router-link>
-      <router-link to="/runreg" class="navbar-item">Run Registry</router-link>
-      <router-link to="/service" class="navbar-item">Services</router-link>
-      <router-link to="/runconf" class="navbar-item">RunKeys</router-link>
+    <nav
+      class="navbar-is-link"
+      role="navigation"
+      aria-label="main navigation"
+      id="topnav"
+    >
+      <router-link to="/vue" id="navbarI" class="navbar-item">Vue</router-link>
+      <router-link to="/webgui" id="navbarI" class="navbar-item">Web GUI</router-link>
+      <router-link to="/dqm" id="navbarI" class="navbar-item">DQM</router-link>
+      <router-link to="/runreg" id="navbarI" class="navbar-item">Run Registry</router-link>
+      <router-link to="/service" id="navbarI" class="navbar-item">Services</router-link>
+      <router-link to="/runconf" id="navbarI" class="navbar-item">RunKeys</router-link>
+      <router-link to="" class="dropdown-icon" @click.native="toogleBar()"
+        >&#9776;</router-link
+      >
     </nav>
-
-    <keep-alive include="webgui">
-      <router-view></router-view>
-    </keep-alive>
   </div>
 </template>
 
 <script>
 export default {
   name: "NavBar",
+  methods: {
+    toogleBar() {
+      const x = document.getElementById("topnav");
+      if (x.className === "navbar-is-link") {
+        x.className += " responsive";
+      } else {
+        x.className = "navbar-is-link";
+      }
+    },
+  },
 };
 </script>
 
@@ -28,7 +42,8 @@ export default {
   height: 50px;
 }
 
-.navbar-item {
+.navbar-item,
+.dropdown-icon {
   float: left;
   padding: 12px;
   color: white;
@@ -36,19 +51,10 @@ export default {
   font-size: 17px;
   width: 16%;
   text-align: center;
-  color: white;
 }
 
-.navbar-item:hover {
-  color: #1e90ff;
-  background-color: white;
-  text-align: center;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  justify-content: space-between;
-}
-
+.navbar-item:hover,
+.dropdown-icon:hover,
 .router-link-exact-active,
 .router-link-active {
   color: #1e90ff;
@@ -58,5 +64,21 @@ export default {
   align-items: center;
   justify-content: center;
   justify-content: space-between;
+}
+
+.dropdown-icon {
+  display: none;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+  .navbar-item {
+    display: none;
+  }
+
+  .dropdown-icon {
+    display: block;
+    float: right;
+  }
+
 }
 </style>
