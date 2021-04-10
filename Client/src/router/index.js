@@ -5,6 +5,7 @@ import Service from "@/components/services";
 import RunKeys from "@/components/runkeys";
 import WebGui from "@/components/webgui";
 import Dqm from "@/components/dqm";
+import RunRegistry from "@/components/runregistry";
 
 Vue.use(Router);
 
@@ -35,6 +36,11 @@ export default new Router({
       path: "/dqm",
       name: "Dqm",
       component: Dqm,
+    },
+    {
+      path: "/runregistry",
+      name: "runregistry",
+      component: RunRegistry,
     },
   ],
 });

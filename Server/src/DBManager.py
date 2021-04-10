@@ -3,14 +3,15 @@ from bson.json_util import dumps
 from bson.objectid import ObjectId
 
 class DBMan:
+    
     def __init__(self):
+        
         self.client = MongoClient("localhost", 27017)
         self.db = self.client.mtddb
         self.app_configs = self.db.app_configs
         self.service_configs = self.db.service_configs
         self.run_config = self.db.run_configs
-
-
+        self.run_registry = self.db.run_registry
 
     # ------ Service Keys --------
 
@@ -88,3 +89,18 @@ class DBMan:
         except:
             return 0
         
+        
+    # ------ Run Registry --------
+
+
+    def GetRunReg(self):
+        # cursor to select everything from the service collection
+        theRunList = list(self.run_registry.find())
+        print(dumps(theRunList))
+        return dumps(theRunList)
+
+    def PostRunReg(self, data):
+        # cursor to select everything from the service collection
+        result = self.run_registry.insert_one(data)
+        print(result.inserted_id)
+        return 1

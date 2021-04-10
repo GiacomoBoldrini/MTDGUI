@@ -108,7 +108,7 @@
           @click="updateStop"
           >Stop</b-button
         >
-        <b-button class="console" variant="warning" @click="currentStatus = 7"
+        <b-button class="console" variant="warning" @click="updateError"
           >Toogle error</b-button
         >
       </div>
@@ -259,6 +259,15 @@ export default {
         this.currentStatus = r.data.newstate;
         this.msg = r.data.msg;
         this.addLog("Stop", this.msg);
+      });
+      this.socket.emit("stopData");
+    },
+    updateError() {
+      axios.post("/api/actions/error").then((r) => {
+        console.log(r.data.newstate);
+        this.currentStatus = r.data.newstate;
+        this.msg = r.data.msg;
+        this.addLog("Error", this.msg);
       });
       this.socket.emit("stopData");
     },

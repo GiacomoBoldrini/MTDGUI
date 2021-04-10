@@ -9,7 +9,7 @@ import numpy as np
 
 router = Blueprint("router", __name__)
 dbman = DBMan()
-run_control = GuiController(socketio)
+run_control = GuiController(socketio, dbman)
 
 # Standard socket connection and disconnection of clients
 clients = 0
@@ -117,6 +117,14 @@ def put_run():
         return jsonify({"msg":"could not delete entry in db"}), 500
     
     
+# DB Actions Run Registry
+
+@router.route("/getRunReg", methods=["GET"])
+def return_runreg():
+    print("Queried run registry")
+    run_reg = dbman.GetRunReg()
+    print(run_reg)
+    return jsonify({"run_reg":run_reg, "msg":"run registry received from db"})
     
 # Gui controlled actions
 
@@ -161,6 +169,14 @@ def resume():
 def restart():
     result, msg = run_control.restart()
     socketio.emit("updatePlots")
+    #socketio.emit('updateAll')
+    return jsonify({"newstate":result, "msg":msg})
+
+# This is a dummy route just to trigger an error in the fsm
+# In  the real life error comunication comes the other way around
+@router.route('/actions/error',methods=['POST'])
+def error():
+    result, msg = run_control.error()
     #socketio.emit('updateAll')
     return jsonify({"newstate":result, "msg":msg})
 

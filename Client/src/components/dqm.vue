@@ -3,8 +3,6 @@
     <section class="but-col">
       <div>Console</div>
       <div>
-        <b-button variant="primary" @click="startDummy">Start</b-button>
-        <b-button variant="primary" @click="stopDummy">Stop</b-button>
         <b-button-group>
           <b-button variant="primary" @click="setNCols(1)">1</b-button>
           <b-button variant="primary" @click="setNCols(2)">2</b-button>

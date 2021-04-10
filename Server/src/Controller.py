@@ -1,12 +1,13 @@
+from .DBManager import DBMan
+import datetime
+
 class GuiController:
     
-    def __init__(self, socket):
+    def __init__(self, socket, dbman):
         self.socket = socket
-        
+        self.dbman = dbman
         self.currentState = "None"
-        
         self.msg = ""
-        
         self.states = {
             "None": 0,
             "Initialize": 1 ,
@@ -17,7 +18,6 @@ class GuiController:
             "Stop": 6,
             "Error": 7,
         }
-        
         self.routes = {
             "None": ["Initialize", "Error"],
             "Initialize": ["Configure", "Error"],
@@ -54,17 +54,20 @@ class GuiController:
             return self.states[self.currentState], self.lastMessage
         
         
-    def configure(self, params):
+    def configure(self, config):
         print("[RunControl][configure] Configure action begin")
         print("Server received parameters")
-        print(self.currentState)
-        print(params)
+        service = config["service"]
+        runkey = config["runkey"]
+        service.pop("_id", None)
+        runkey.pop("_id", None)
         # can we go configured?
         if "Configure" in self.routes[self.currentState] :
             try:
                 print("Configured ... ")
                 self.currentState = "Configure"
                 self.lastMessage = "Configure ..."
+                self.configuration = {"service": service, "runkey": runkey}
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
@@ -154,6 +157,8 @@ class GuiController:
                 print("Stop ... ")
                 self.currentState = "Stop"
                 self.lastMessage = "Stop ..."
+                #saving run on db
+                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState]})
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
@@ -173,4 +178,30 @@ class GuiController:
         self.currentState = "None"
         self.lastMessage = "Restarting the app"
         return self.states[self.currentState], self.lastMessage
+    
+    
+    def error(self):
+        print("[RunControl][error] Error action begin")
+        # can we go in error? Yes otherwise we are already in error
+        if "Error" in self.routes[self.currentState] :
+            try:
+                print("Error ... ")
+                # Post configuration to run  registry before changing state so one knows 
+                # At which point an error has been fired
+                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState]})
+                self.currentState = "Error"
+                self.lastMessage = "Error ..."
+                return self.states[self.currentState], self.lastMessage
+                # do somthing...
+            except:
+                if "Error" in self.routes[self.currentState] :
+                    self.currentState = "Error"
+                    self.lastMessage = "An error appeared while error"
+                    return self.states[self.currentState], self.lastMessage
+                else:
+                    raise Exception("Error")
+
+        else:
+            self.lastMessage = "Transition not allowed!"
+            return self.states[self.currentState], self.lastMessage
         
