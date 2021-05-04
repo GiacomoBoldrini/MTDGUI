@@ -1,54 +1,35 @@
 # MTDGUI
 WEB GUI for the MTD Experiment at CMS,  with the support of ECAL DAQ Team https://gitlab.cern.ch/ecal-daq-upgrade
 
-# Requirements
+# Software
+This GUI has been developed with Vue-CLI for the frontend and Flask with python3 for the backend. Web sockects exploited  through zqm and Flask-socket.io service
 
-## Python:
+# Setup
+Tested for MacOS (BigSur, should work with previous OS) and Linux based OS such as Debian and Ubuntu.
+All the needed setup is automatic. The only requirement at the moment is  to have a python3 on your OS.
+
 ```
-Package          Version
----------------- -------
-aniso8601        9.0.1
-beautifulsoup4   4.9.3
-bidict           0.21.2
-click            7.1.2
-dnspython        1.16.0
-eventlet         0.30.2
-Flask            1.1.2
-Flask-RESTful    0.3.8
-Flask-SocketIO   5.0.1
-gevent           21.1.2
-gevent-websocket 0.10.1
-greenlet         1.0.0
-itsdangerous     1.1.0
-Jinja2           2.11.3
-MarkupSafe       1.1.1
-pymongo          3.11.3
-python-engineio  4.0.1
-python-socketio  5.1.0
-pytz             2021.1
-setuptools       47.1.0
-six              1.15.0
-soupsieve        2.2.1
-Werkzeug         1.0.1
-zope.event       4.5.0
-zope.interface   5.3.0
+git clone git@github.com:GiacomoBoldrini/MTDGUI.git
+cd MTDGUI
+source setup.sh
 ```
-Essentials are `pymongo`, `flask`, `Flask-SocketIO`, `gevent`, `python-engineio`, `python-socketio`, `gevent-websocket`others should be dependencies.
 
-
-## Node:
-`npm install` under the Client folder will install all the dependencies. In case of error try with `nvm install 10` after removing the node_packages folder and install them again.
+This will install node, npm, nvm mongodb, vue-cli and all python libraries:
+- Node dependencies for vue can be found under `Client/packages.json`
+- Python dependencies for backend can be found  under `Server/requirements.txt`
 
 # Start
 
+Open two separate shells. In the first one run the frontend in development mode
 ```
 cd Client
 npm run dev
 ```
 
-From another folder
+From the other shell, activate the environment and run the server side
 
 ```
+source env/bin/activate
 cd Server
 python3 app.py
 ```
