@@ -1,5 +1,38 @@
 echo "@INFO: Starting to setup the MTDGUI. Only use this script in a Linux-based or MacOS operating system"
 
+mkdir MTDSuite && cd MTDSuite
+
+# Installing root it not present 
+root_=$(which root)
+if [ -z "$root_" ]
+then 
+    cd 
+    git clone --branch v6-22-00-patches https://github.com/root-project/root.git root_src
+    mkdir root_build root_install && cd root_build
+    cmake -DCMAKE_INSTALL_PREFIX=../root_install ../root_src
+    cmake --build . -- install -j4
+    source ../root_install/bin/thisroot.sh 
+
+    cd -
+else
+    echo "@INFO: Detected ROOT, continuing without installation ..."
+fi
+
+# Installing the MTD Analysis packages
+
+mkdir MTDAnalysis && cd MTDAnalysis
+git@github.com:Lab5015/Lab5015Analysis.git
+git@github.com:Lab5015/sw_daq_tofhir2.git
+
+cd Lab5015Analysis
+source scripts/setup.sh
+make
+make exe 
+
+cd ..
+
+# Now setup GUI specific
+
 PY=$(which python3)
 
 # Check if py3 is present. For now exit otherwise
@@ -80,6 +113,7 @@ deactivate
 cd Client
 # Install Vue globally on the machine
 npm update
+npm cache verify
 npm install -g @vue/cli
 npm install 
 
