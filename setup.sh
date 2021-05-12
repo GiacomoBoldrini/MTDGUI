@@ -1,11 +1,11 @@
 echo "@INFO: Starting to setup the MTDGUI. Only use this script in a Linux-based or MacOS operating system"
 
-mkdir MTDSuite && cd MTDSuite
-
 # Installing brew if on mac
 if [ $OSTYPE == "darwin*"]
+then 
     brew_=$(which brew)
     if [ -z "$brew_"]
+    then 
         echo "@INFO: Detected MacOS OS ..."
         xcode-select --install
         # Installing Homebrew
