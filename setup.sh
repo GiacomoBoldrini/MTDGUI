@@ -1,10 +1,10 @@
 echo "@INFO: Starting to setup the MTDGUI. Only use this script in a Linux-based or MacOS operating system"
 
 # Installing brew if on mac
-if [ $OSTYPE == "darwin*"]
+if [ $OSTYPE == "darwin*" ]
 then 
     brew_=$(which brew)
-    if [ -z "$brew_"]
+    if [ -z "$brew_" ]
     then 
         echo "@INFO: Detected MacOS OS ..."
         xcode-select --install
@@ -19,10 +19,12 @@ root_=$(which root)
 if [ -z "$root_" ]
 then 
     cd
-    if [ $OSTYPE == "linux-gnu"]
+    echo "@INFO Installing ROOT v6.22.00 ... "
+    if [ $OSTYPE == "linux-gnu" ]
     then 
         wget https://root.cern/download/root_v6.22.00.Linux-ubuntu19-x86_64-gcc9.2.tar.gz
         tar -xzvf root_v6.22.00.Linux-ubuntu19-x86_64-gcc9.2.tar.gz
+        rm root_v6.22.00.Linux-ubuntu19-x86_64-gcc9.2.tar.gz
         source root/bin/thisroot.sh
 
     elif [ $OSTYPE == "darwin*" ]
@@ -37,16 +39,16 @@ fi
 
 # Installing the MTD Analysis packages
 
-mkdir MTDAnalysis && cd MTDAnalysis
-git@github.com:Lab5015/Lab5015Analysis.git
-git@github.com:Lab5015/sw_daq_tofhir2.git
+mkdir -p MTDAnalysis && cd MTDAnalysis
+git clone --recursive git@github.com:Lab5015/Lab5015Analysis.git
+git clone git@github.com:Lab5015/sw_daq_tofhir2.git
 
 cd Lab5015Analysis
 source scripts/setup.sh
 make
 make exe 
 
-cd ..
+cd ../..
 
 # Now setup GUI specific
 
