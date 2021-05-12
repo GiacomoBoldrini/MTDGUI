@@ -2,17 +2,34 @@ echo "@INFO: Starting to setup the MTDGUI. Only use this script in a Linux-based
 
 mkdir MTDSuite && cd MTDSuite
 
+# Installing brew if on mac
+if [ $OSTYPE == "darwin*"]
+    brew_=$(which brew)
+    if [ -z "$brew_"]
+        echo "@INFO: Detected MacOS OS ..."
+        xcode-select --install
+        # Installing Homebrew
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        brew update 
+    fi
+fi 
+
 # Installing root it not present 
 root_=$(which root)
 if [ -z "$root_" ]
 then 
-    cd 
-    git clone --branch v6-22-00-patches https://github.com/root-project/root.git root_src
-    mkdir root_build root_install && cd root_build
-    cmake -DCMAKE_INSTALL_PREFIX=../root_install ../root_src
-    cmake --build . -- install -j4
-    source ../root_install/bin/thisroot.sh 
+    cd
+    if [ $OSTYPE == "linux-gnu"]
+    then 
+        wget https://root.cern/download/root_v6.22.00.Linux-ubuntu19-x86_64-gcc9.2.tar.gz
+        tar -xzvf root_v6.22.00.Linux-ubuntu19-x86_64-gcc9.2.tar.gz
+        source root/bin/thisroot.sh
 
+    elif [ $OSTYPE == "darwin*" ]
+    then 
+        brew install root
+
+    fi
     cd -
 else
     echo "@INFO: Detected ROOT, continuing without installation ..."
@@ -76,12 +93,6 @@ then
 
 elif [ $OSTYPE == "darwin*" ]
 then 
-    echo "@INFO: Detected MacOS OS ..."
-    xcode-select --install
-    # Installing Homebrew
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    brew update 
-
     # Installing venv for virtual environments
     pip3 install virtualenv
     virtualenv -p python3 env 
