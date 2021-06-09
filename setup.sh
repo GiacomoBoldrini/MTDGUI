@@ -107,6 +107,8 @@ then
     # Installing mongo
     brew tap mongodb/brew
     brew install mongodb-community@4.4
+    #mongodb server starting
+    brew services start mongodb-community
 
 else
     echo "ERROR: Unsupported operating system. Currently working with MacOS (darwin) or Linux-based (Ubuntu, Debian, ...). Exiting"
