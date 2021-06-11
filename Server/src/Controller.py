@@ -6,7 +6,7 @@ class GuiController:
     
     def __init__(self, socket, dbman):
         self.socket = socket
-        self.AppC = AppController()
+        self.AppC = AppController(socket)
         self.dbman = dbman
         self.currentState = "None"
         self.msg = ""
@@ -33,6 +33,11 @@ class GuiController:
         self.run_status = 1  #"run property" is actually composite as it contains every possible action you would like to do
         
     # Receive actions from Gui and do things
+
+
+    def updateState(self, status):
+        self.socket.emit('updateTheState', {"state": status})
+        return
     
     def initialize(self):
         print("[RunControl][initialize] Initialize action begin")
@@ -96,27 +101,38 @@ class GuiController:
         print("[RunControl][initialize] Run action begin")
         # can we go ininitialize?
         if "Run" in self.routes[self.currentState] :
-            try:
-                print("Run ... ")
-                self.currentState = "Run"
-                self.lastMessage = "Run ..."
-                execution, run_status = self.AppC.runAllApps()
-                self.run_status = run_status
-                #after execution we can set the state to stop if successfull
-                self.stop()
-                if not execution:
-                    self.currentState = "Error"
-                    self.lastMessage = "An error appeared while Run"
+            self.currentState = "Run"
+            self.lastMessage = "Run ..."
+            self.updateState(self.states[self.currentState])
 
-                return self.states[self.currentState], self.lastMessage
-                # do somthing...
+            """
+            try:
+                self.stop()
             except:
-                if "Error" in self.routes[self.currentState] :
-                    self.currentState = "Error"
-                    self.lastMessage = "An error appeared while Run"
-                    return self.states[self.currentState], self.lastMessage
-                else:
-                    raise Exception("Error")
+                pass
+
+            return self.states[self.currentState], self.lastMessage
+
+            """
+            #try:
+            execution, run_status = self.AppC.runAllApps()
+            self.run_status = run_status
+            #after execution we can set the state to stop if successfull
+            self.stop()
+            if not execution:
+                self.currentState = "Error"
+                self.lastMessage = "An error appeared while Run"
+
+            return self.states[self.currentState], self.lastMessage
+            # do somthing...
+            # except:
+            #     if "Error" in self.routes[self.currentState] :
+            #         self.currentState = "Error"
+            #         self.lastMessage = "An error appeared while Run"
+            #         return self.states[self.currentState], self.lastMessage
+            #     else:
+            #         raise Exception("Error")
+            
 
         else:
             self.lastMessage = "Transition not allowed!"
@@ -171,10 +187,11 @@ class GuiController:
         print("[RunControl][pause] Stop action begin")
         # can we go ininitialize?
         if "Stop" in self.routes[self.currentState] :
+            self.currentState = "Stop"
+            self.lastMessage = "Stop ..."
+            self.updateState(self.states[self.currentState])
             try:
                 print("Stop ... ")
-                self.currentState = "Stop"
-                self.lastMessage = "Stop ..."
                 #saving run on db
                 self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState]})
                 return self.states[self.currentState], self.lastMessage

@@ -1,10 +1,12 @@
 import os 
 import sys 
 import subprocess
+from datetime import datetime
 
 class AppController:
     
-    def __init__(self):
+    def __init__(self, socket):
+        self.socket = socket
         self.service = {}
         self.dataApplications = {}
         self.recoApplications = {}
@@ -24,11 +26,23 @@ class AppController:
         }
 
         self.currentState = "Initialize"
+
+
+    #needed in case you want to run again some recontrusction or such 
+    def externalSetFSMstatus(self, status):
+        self.currentState = status 
+        return 
     
-    def execute(self, command, appName):
-        process = subprocess.Popen(command, shell=True)
+    def execute(self, key, commands):
+        process = subprocess.Popen(commands["exe"], shell=True)
         pid = process.pid
-        self.pids[appName] = pid
+        self.pids[commands["name"]] = pid
+        print("prima ti time")
+        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        print("prima dell emit")
+
+        self.socket.emit('currentApp', {"app": {"name":commands["name"], "step":key, "time":time, "pid":pid }})
+        print("dopo emit")
         out, err = process.communicate()
 
         if err: print(err)
@@ -68,8 +82,8 @@ class AppController:
 
     def parseService(self, sconfig_):
         #will be passed as a json string
+        to_gui = []
         sconfig = eval(sconfig_)
-        print(sconfig)
         parsingOk = 1
         #checking fields
         mandatory_keys = ["data", "reco"]
@@ -82,12 +96,14 @@ class AppController:
                 print("[AppControl][Error] App key {} does not match self.states, check the input ... ".format(key))
                 return 0
             appName = sconfig["data"][key].split(" ")[0].split("/")[-1]
+            to_gui.append({"step": key, "name": appName, "time": 0, "pid": 0})
             self.dataApplications[key] = {"exe": sconfig["data"][key], "name": appName}
         for key in sconfig["reco"].keys():
             if key not in self.states:
                 print("[AppControl][Error] App key {} does not match self.states, check the input ... ".format(key))
                 return 0
             appName = sconfig["reco"][key].split(" ")[0].split("/")[-1]
+            to_gui.append({"step": key, "name": appName, "time": 0, "pid": 0})
             self.recoApplications[key] = {"exe": sconfig["reco"][key], "name": appName}
 
         dataOk, recoOk = self.checkAppExist()
@@ -96,6 +112,8 @@ class AppController:
         print("[AppControl] All apps have been checked and saved. Ready to run ...")
 
         self.currentState = "Configure" #no check because to call this method you have to create the obj therefore it is in initialize by construction
+
+        self.socket.emit('queryApps', {"apps": to_gui})
 
         return parsingOk 
 
@@ -108,7 +126,8 @@ class AppController:
         #running data taking and so on
         for key in self.dataApplications.keys():
             if self.canGo(key): 
-                success = self.execute(self.dataApplications[key]["exe"], self.dataApplications[key]["name"])
+                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key})
+                success = self.execute(key, self.dataApplications[key])
                 if success != 0: 
                     errorState = self.currentState
                     self.currentState = "Error"
@@ -125,7 +144,8 @@ class AppController:
         #running reconstruction  and so on
         for key in self.recoApplications.keys():
             if self.canGo(key): 
-                success = self.execute(self.recoApplications[key]["exe"], self.recoApplications[key]["name"])
+                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key})
+                success = self.execute(key, self.recoApplications[key])
                 if success != 0: 
                     errorState = self.currentState
                     self.currentState = "Error"

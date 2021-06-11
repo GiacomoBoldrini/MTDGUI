@@ -6,6 +6,33 @@
     <div class="leftpane">
       <div class="jumbotron jumbotron-fluid">
         <div class="container">
+          <table class="table" v-if="currentStatus >= 2">
+            <caption>
+              List of Applications
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Step</th>
+                <th scope="col">AppName</th>
+                <th scope="col">Time</th>
+                <th scope="col">PID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(app, index) in apps"
+                v-bind:key="app.name"
+                :class="appStatCheck(app.state)"
+              >
+                <th scope="row">{{ index }}"</th>
+                <td>{{ app.step }}</td>
+                <td>{{ app.name }}</td>
+                <td>{{ app.time }}</td>
+                <td>{{ app.pid }}</td>
+              </tr>
+            </tbody>
+          </table>
           <hr />
           <div>
             <b-card no-body>
@@ -64,7 +91,7 @@
       </div>
 
       <hr />
-      
+
       Configure
       <section class="configurations Service">
         <b-dropdown text="Select Service" variant="outline-primary" class="m-2">
@@ -160,6 +187,7 @@ export default {
       socket: io("http://127.0.0.1:5000/", {
         transports: ["websocket"],
       }),
+      currentAppState: "",
       currentStatus: 0,
       recoStatus: 0,
       actions: [
@@ -174,10 +202,11 @@ export default {
       recoStep: [
         { actionName: "Step1", value: 1 },
         { actionName: "Step2", value: 2 },
-        { actionName: "Step3", value: 3 }
+        { actionName: "Step3", value: 3 },
       ],
       runkeys: [],
       services: [],
+      apps: [],
       chose_service: "",
       chose_run: "",
       runConfig: {},
@@ -200,6 +229,11 @@ export default {
         this.actions[this.currentStatus - 1].value >= idx
           ? "success"
           : "warning";
+      return style;
+    },
+    appStatCheck(state) {
+      const style =
+        this.currentAppState === state ? "table-primary" : "table-active";
       return style;
     },
     statDisable(idx) {
@@ -345,9 +379,38 @@ export default {
     this.socket.on("connect", () => {
       console.log("Connected!");
     });
+    this.socket.on("updateTheState", (data) => {
+      console.log("Update current status");
+      this.currentStatus = data.state;
+      console.log(this.currentStatus);
+    });
     this.socket.on("receive", (socket) => {
       this.received_m = socket.message;
       this.didReceived = true;
+    });
+    this.socket.on("runningApp", (data) => {
+      this.received_m = data.currentapp;
+    });
+    this.socket.on("queryApps", (data) => {
+      console.log(data.apps);
+      this.apps = data.apps;
+      for (let i = 0; i < this.apps.length; i += 1) {
+        console.log(this.apps[i].name);
+      }
+    });
+
+    this.socket.on("currentApp", (data) => {
+      for (let i = 0; i < this.apps.length; i += 1) {
+        if (
+          this.apps[i].name === data.app.name &&
+          this.apps[i].step === data.app.step
+        ) {
+          this.currentAppState = data.app.step;
+          this.apps[i].time = data.app.time;
+          this.apps[i].pid = data.app.pid;
+        }
+      }
+      console.log(this.apps);
     });
 
     this.get_services_from_db();
