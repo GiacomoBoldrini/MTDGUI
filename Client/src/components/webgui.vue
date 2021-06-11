@@ -48,7 +48,23 @@
           >
         </b-button-group>
       </div>
+
+      <div class="status" v-if="recoStatus !== 0">
+        <b-button-group size="lg">
+          <b-button
+            class="PrimaryButtons"
+            v-for="(action, index) in reco_actions.slice(0, -1)"
+            :key="action.value"
+            :variant="statCheck(action.value)"
+            :disabled="statDisable(action.value)"
+            @click="executeButton(index)"
+            >{{ action.actionName }}</b-button
+          >
+        </b-button-group>
+      </div>
+
       <hr />
+      
       Configure
       <section class="configurations Service">
         <b-dropdown text="Select Service" variant="outline-primary" class="m-2">
@@ -84,7 +100,11 @@
           >Configure</b-button
         >
       </div>
+
       <hr />
+
+      <hr />
+
       Console
       <div class="configurations">
         <b-button
@@ -141,6 +161,7 @@ export default {
         transports: ["websocket"],
       }),
       currentStatus: 0,
+      recoStatus: 0,
       actions: [
         { actionName: "Initialize", value: 1 },
         { actionName: "Configured", value: 2 },
@@ -149,6 +170,11 @@ export default {
         { actionName: "Resume", value: 5 },
         { actionName: "Stop", value: 6 },
         { actionName: "Error", value: 7 },
+      ],
+      recoStep: [
+        { actionName: "Step1", value: 1 },
+        { actionName: "Step2", value: 2 },
+        { actionName: "Step3", value: 3 }
       ],
       runkeys: [],
       services: [],
@@ -230,7 +256,7 @@ export default {
         this.msg = r.data.msg;
         this.addLog("Running", this.msg);
       });
-      this.socket.emit("sendData");
+      // this.socket.emit("sendData");
     },
     updatePause() {
       console.log("Paused!");

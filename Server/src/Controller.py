@@ -1,10 +1,12 @@
 from .DBManager import DBMan
+from .AppControl import AppController
 import datetime
 
 class GuiController:
     
     def __init__(self, socket, dbman):
         self.socket = socket
+        self.AppC = AppController()
         self.dbman = dbman
         self.currentState = "None"
         self.msg = ""
@@ -28,6 +30,7 @@ class GuiController:
             "Stop": ["Error"],
             "Error": []
         }
+        self.run_status = 1  #"run property" is actually composite as it contains every possible action you would like to do
         
     # Receive actions from Gui and do things
     
@@ -68,6 +71,13 @@ class GuiController:
                 self.currentState = "Configure"
                 self.lastMessage = "Configure ..."
                 self.configuration = {"service": service, "runkey": runkey}
+                #initializing apps in appcontrol
+                status = self.AppC.parseService(service["request_config"])
+                if not status:
+                    if "Error" in self.routes[self.currentState] :
+                        self.currentState = "Error"
+                        self.lastMessage = "An error appeared while Configure"
+
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
@@ -90,6 +100,14 @@ class GuiController:
                 print("Run ... ")
                 self.currentState = "Run"
                 self.lastMessage = "Run ..."
+                execution, run_status = self.AppC.runAllApps()
+                self.run_status = run_status
+                #after execution we can set the state to stop if successfull
+                self.stop()
+                if not execution:
+                    self.currentState = "Error"
+                    self.lastMessage = "An error appeared while Run"
+
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
