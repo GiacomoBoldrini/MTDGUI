@@ -23,7 +23,7 @@
               <tr
                 v-for="(app, index) in apps"
                 v-bind:key="app.name"
-                :class="appStatCheck(app.state)"
+                :class="appStatCheck(app.step)"
               >
                 <th scope="row">{{ index }}"</th>
                 <td>{{ app.step }}</td>
@@ -390,8 +390,17 @@ export default {
     });
     this.socket.on("runningApp", (data) => {
       console.log("Ho ricevuto la current app");
+      this.currentAppState = data.step;
       console.log(data);
-      this.received_m = data.currentapp;
+      // changing pid:
+      for (let i = 0; i < this.apps.length; i += 1) {
+        if (
+          this.apps[i].name === data.name &&
+          this.apps[i].step === data.step
+        ) {
+          this.apps.splice(i, 1, data);
+        }
+      }
     });
     this.socket.on("queryApps", (data) => {
       console.log(data.apps);

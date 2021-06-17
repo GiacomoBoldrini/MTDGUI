@@ -22,7 +22,8 @@ class TemplateThreadApp(threading.Thread):
         print("Hey! Sto girando ora")
 
         print("Running {}".format(self.cmd))
-        process = subprocess.Popen(self.cmd) # runs
+
+        process = subprocess.Popen(self.cmd.split()) # runs
         self.pid = process.pid #retrieves pid
         print("Il pid della nuova app che ho lanciato: {}".format(process.pid))
         process.wait() # wait until this step is completed

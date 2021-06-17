@@ -22,11 +22,11 @@ class AppController:
             "Initialize": 1 ,
             "Configure": 2 ,
             "Data": 3,
-            "Convert": 4,
-            "Step1": 5,
-            "Step2": 6,
-            "Step3": 7,
-            "Error": 8,
+            #"Convert": 4,
+            "Step1": 4,
+            "Step2": 5,
+            "Step3": 6,
+            "Error": 7,
         }
 
         self.currentState = "Initialize"
@@ -68,6 +68,11 @@ class AppController:
         for appName in self.dataApplications.keys():
             appPath = self.dataApplications[appName]["exe"].split(" ")[0]
             if "./" in appPath[:2] : appPath = appPath[2:]
+            if "source " in appPath : appPath = appPath.split("source ")[1]
+            if "bash " in appPath : appPath = appPath.split("bash ")[1]
+            if "python " in appPath : appPath = appPath.split("python ")[1]
+            print("---------------------------")
+            print("---------------------------")
             #check file existance
             if not os.path.isfile(appPath): 
                 dataOk = 0
@@ -76,6 +81,10 @@ class AppController:
         for appName in self.recoApplications.keys():
             appPath = self.recoApplications[appName]["exe"].split(" ")[0]
             if "./" in appPath[:2] : appPath = appPath[2:]
+            if "./" in appPath[:2] : appPath = appPath[2:]
+            if "source " in appPath : appPath = appPath.split("source ")[1]
+            if "bash " in appPath : appPath = appPath.split("bash ")[1]
+            if "python " in appPath : appPath = appPath.split("python ")[1]
             #check file existance
             if not os.path.isfile(appPath): 
                 recoOk = 0
@@ -110,7 +119,9 @@ class AppController:
             to_gui.append({"step": key, "name": appName, "time": 0, "pid": 0})
             self.recoApplications[key] = {"exe": sconfig["reco"][key], "name": appName}
 
-        dataOk, recoOk = self.checkAppExist()
+        #need a smarter way to check app existance 
+        #dataOk, recoOk = self.checkAppExist()
+        dataOk, recoOk = 1,1 #for now let's suppose everything is ok
         parsingOk = parsingOk and dataOk and recoOk 
 
         print("[AppControl] All apps have been checked and saved. Ready to run ...")
@@ -138,9 +149,7 @@ class AppController:
         print(list(self.dataApplications.keys()))
         print(os.getpid())
         for dataApp in self.dataApplications.keys():
-            print(dataApp, self.dataApplications[dataApp] )
             self.dataApplications[dataApp]["app"] = TemplateThreadApp(cmd=self.dataApplications[dataApp]["exe"])
-            print("miao")
             self.dataApplications[dataApp]["pid"] = self.dataApplications[dataApp]["app"].pid
             self.dataApplications[dataApp]["app"].start()
 
@@ -164,8 +173,9 @@ class AppController:
         for key in self.dataApplications.keys():
             if self.canGo(key):
                 self.dataApplications[key]["app"].runApp()
-                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid})
                 while self.dataApplications[key]["app"].shouldRun:
+                    time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                    self.socket.emit('runningApp', {"name": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid, "time": time})
                     self.socket.sleep(1)
                 #here the app finished 
                 print("[AppControl] App finished running, updating status")
@@ -175,13 +185,16 @@ class AppController:
 
         print("[AppControl] Info: data taking ended successfully")
 
-        #running reconstruction  and so on
         for key in self.recoApplications.keys():
-            if self.canGo(key): 
-                self.dataApplications[key]["app"].shoudRun = True
-                self.socket.emit('runningApp', {"currentapp": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid})
+            if self.canGo(key):
+                self.recoApplications[key]["app"].runApp()
+                while self.recoApplications[key]["app"].shouldRun:
+                    time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                    self.socket.emit('runningApp', {"name": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid, "time": time})
+                    self.socket.sleep(1)
+                #here the app finished 
+                print("[AppControl] App finished running, updating status")
                 self.currentState = key
-
             else:
                 print("[AppControl] Info: Skipping app {}".format(key))
 
