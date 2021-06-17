@@ -115,7 +115,7 @@ class GuiController:
 
             """
             #try:
-            execution, run_status = self.AppC.runAllApps()
+            execution, run_status = self.AppC.threadRun()
             self.run_status = run_status
             #after execution we can set the state to stop if successfull
             self.stop()

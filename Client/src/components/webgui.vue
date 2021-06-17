@@ -185,7 +185,7 @@ export default {
   data() {
     return {
       socket: io("http://127.0.0.1:5000/", {
-        transports: ["websocket"],
+        transport: ["websocket"],
       }),
       currentAppState: "",
       currentStatus: 0,
@@ -389,6 +389,8 @@ export default {
       this.didReceived = true;
     });
     this.socket.on("runningApp", (data) => {
+      console.log("Ho ricevuto la current app");
+      console.log(data);
       this.received_m = data.currentapp;
     });
     this.socket.on("queryApps", (data) => {

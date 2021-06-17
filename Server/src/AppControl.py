@@ -2,6 +2,9 @@ import os
 import sys 
 import subprocess
 from datetime import datetime
+from .Template import TemplateThreadApp
+import threading
+import time
 
 class AppController:
     
@@ -11,6 +14,7 @@ class AppController:
         self.dataApplications = {}
         self.recoApplications = {}
         self.pids = {}
+        self.appObj = {}
         
         #you can go up by 1 in this list, or in error, or in any step below (to rerun steps)
         #whose execution was successful
@@ -112,10 +116,43 @@ class AppController:
         print("[AppControl] All apps have been checked and saved. Ready to run ...")
 
         self.currentState = "Configure" #no check because to call this method you have to create the obj therefore it is in initialize by construction
+        
+        print("ciao")
+        self.initApps()
+
+        for key in self.dataApplications.keys():
+            for i in range(len(to_gui)):
+                if to_gui[i]["step"] == key: to_gui[i]["pid"] = self.dataApplications[key]["pid"]
+
+        for key in self.recoApplications.keys():
+            for i in range(len(to_gui)):
+                if to_gui[i]["step"] == key: to_gui[i]["pid"] = self.recoApplications[key]["pid"]
 
         self.socket.emit('queryApps', {"apps": to_gui})
 
+
         return parsingOk 
+
+
+    def initApps(self):
+        print(list(self.dataApplications.keys()))
+        print(os.getpid())
+        for dataApp in self.dataApplications.keys():
+            print(dataApp, self.dataApplications[dataApp] )
+            self.dataApplications[dataApp]["app"] = TemplateThreadApp(cmd=self.dataApplications[dataApp]["exe"])
+            print("miao")
+            self.dataApplications[dataApp]["pid"] = self.dataApplications[dataApp]["app"].pid
+            self.dataApplications[dataApp]["app"].start()
+
+        for recoApp in self.recoApplications.keys():
+            self.recoApplications[recoApp]["app"] = TemplateThreadApp(cmd=self.recoApplications[recoApp]["exe"])
+            self.recoApplications[recoApp]["pid"] = self.recoApplications[recoApp]["app"].pid
+            self.recoApplications[recoApp]["app"].start()
+
+
+        print("[AppControl] Initialized all Apps ... Ready to run")
+
+        return
 
 
     def runAllApps(self):
@@ -125,16 +162,13 @@ class AppController:
         print("-----------------------")
         #running data taking and so on
         for key in self.dataApplications.keys():
-            if self.canGo(key): 
-                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key})
-                success = self.execute(key, self.dataApplications[key])
-                if success != 0: 
-                    errorState = self.currentState
-                    self.currentState = "Error"
-                    print("[AppControl][Error] An error occurred while running app {}: {}".format(key, self.dataApplications[key]["name"]))
-
-                    return 0, errorState
-
+            if self.canGo(key):
+                self.dataApplications[key]["app"].runApp()
+                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid})
+                while self.dataApplications[key]["app"].shouldRun:
+                    self.socket.sleep(1)
+                #here the app finished 
+                print("[AppControl] App finished running, updating status")
                 self.currentState = key
             else:
                 print("[AppControl] Info: Skipping app {}".format(key))
@@ -144,15 +178,8 @@ class AppController:
         #running reconstruction  and so on
         for key in self.recoApplications.keys():
             if self.canGo(key): 
-                self.socket.emit('runningApp', {"currentapp": self.dataApplications[key]["name"], "step": key})
-                success = self.execute(key, self.recoApplications[key])
-                if success != 0: 
-                    errorState = self.currentState
-                    self.currentState = "Error"
-                    print("[AppControl][Error] An error occurred while running app {}: {}".format(key, self.dataApplications[key]["name"]))
-
-                    return 0, errorState
-
+                self.dataApplications[key]["app"].shoudRun = True
+                self.socket.emit('runningApp', {"currentapp": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid})
                 self.currentState = key
 
             else:
@@ -160,5 +187,15 @@ class AppController:
 
 
         #returnin a nice message if everything is ok
-        print("final: ", self.currentState)
-        return 1, self.currentState
+        #print("final: ", self.currentState)
+        #return 1, self.currentState
+
+
+    def threadRun(self):
+
+        tf = threading.Thread(target=self.runAllApps)
+        tf.start()
+        print("Waiting for thread to end")
+        tf.join() 
+
+        return 1, "Step3"
