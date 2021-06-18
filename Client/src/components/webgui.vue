@@ -12,7 +12,6 @@
             </caption>
             <thead>
               <tr>
-                <th scope="col">#</th>
                 <th scope="col">Step</th>
                 <th scope="col">AppName</th>
                 <th scope="col">Time</th>
@@ -21,12 +20,11 @@
             </thead>
             <tbody>
               <tr
-                v-for="(app, index) in apps"
+                v-for="app in apps"
                 v-bind:key="app.name"
                 :class="appStatCheck(app.step)"
               >
-                <th scope="row">{{ index }}"</th>
-                <td>{{ app.step }}</td>
+                <th scope="row">{{ app.step }}</th>
                 <td>{{ app.name }}</td>
                 <td>{{ app.time }}</td>
                 <td>{{ app.pid }}</td>
@@ -45,11 +43,11 @@
                     </b-card-text>
                   </div>
                 </b-tab>
-                <b-tab title="Plots">
+                <!-- <b-tab title="Plots">
                   <div class="log-overflow">
                     <graph-chart />
                   </div>
-                </b-tab>
+                </b-tab> -->
               </b-tabs>
             </b-card>
           </div>
@@ -286,9 +284,9 @@ export default {
     },
     updateRunning() {
       axios.post("/api/actions/start").then((r) => {
-        this.currentStatus = r.data.newstate;
-        this.msg = r.data.msg;
-        this.addLog("Running", this.msg);
+        // this.currentStatus = r.data.newstate;
+        // this.msg = r.data.msg;
+        // this.addLog("Running", this.msg);
       });
       // this.socket.emit("sendData");
     },
@@ -383,6 +381,7 @@ export default {
       console.log("Update current status");
       this.currentStatus = data.state;
       console.log(this.currentStatus);
+      this.addLog(data.msg, data.state);
     });
     this.socket.on("receive", (socket) => {
       this.received_m = socket.message;

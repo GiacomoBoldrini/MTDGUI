@@ -15,6 +15,7 @@ class AppController:
         self.recoApplications = {}
         self.pids = {}
         self.appObj = {}
+        self.Stop = False
         
         #you can go up by 1 in this list, or in error, or in any step below (to rerun steps)
         #whose execution was successful
@@ -146,6 +147,7 @@ class AppController:
 
 
     def initApps(self):
+        self.Stop = False
         print(list(self.dataApplications.keys()))
         print(os.getpid())
         for dataApp in self.dataApplications.keys():
@@ -171,32 +173,41 @@ class AppController:
         print("-----------------------")
         #running data taking and so on
         for key in self.dataApplications.keys():
-            if self.canGo(key):
-                self.dataApplications[key]["app"].runApp()
-                while self.dataApplications[key]["app"].shouldRun:
-                    time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                    self.socket.emit('runningApp', {"name": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid, "time": time})
-                    self.socket.sleep(1)
-                #here the app finished 
-                print("[AppControl] App finished running, updating status")
-                self.currentState = key
-            else:
-                print("[AppControl] Info: Skipping app {}".format(key))
+            try:
+                if self.canGo(key) and not self.Stop:
+                    self.dataApplications[key]["app"].runApp()
+                    while self.dataApplications[key]["app"].isRunning():
+                        self.currentState = key
+                        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                        self.socket.emit('runningApp', {"name": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid, "time": time})
+                        self.socket.sleep(1)
+                    #here the app finished 
+                    print("[AppControl] App finished running")
+
+                else:
+                    print("[AppControl] Info: Skipping app {}".format(key))
+            except:
+                return 0, self.currentState
 
         print("[AppControl] Info: data taking ended successfully")
 
         for key in self.recoApplications.keys():
-            if self.canGo(key):
-                self.recoApplications[key]["app"].runApp()
-                while self.recoApplications[key]["app"].shouldRun:
-                    time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                    self.socket.emit('runningApp', {"name": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid, "time": time})
-                    self.socket.sleep(1)
-                #here the app finished 
-                print("[AppControl] App finished running, updating status")
-                self.currentState = key
-            else:
-                print("[AppControl] Info: Skipping app {}".format(key))
+            try:
+                if self.canGo(key) and not self.Stop:
+                    self.recoApplications[key]["app"].runApp()
+                    while self.recoApplications[key]["app"].isRunning():
+                        self.currentState = key
+                        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                        self.socket.emit('runningApp', {"name": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid, "time": time})
+                        self.socket.sleep(1)
+                    #here the app finished 
+                    print("[AppControl] App finished running, updating status")
+                else:
+                    print("[AppControl] Info: Skipping app {}".format(key))
+            except:
+                return 0, self.currentState
+
+        return 1, self.currentState
 
 
         #returnin a nice message if everything is ok
@@ -212,3 +223,21 @@ class AppController:
         tf.join() 
 
         return 1, "Step3"
+
+
+    def stopAllApps(self):
+
+        self.Stop = True
+
+        for dataApp in self.dataApplications.keys():
+            if self.dataApplications[dataApp]["app"].isRunning():
+                self.dataApplications[dataApp]["app"].stopApp()
+        for recoApp in self.recoApplications.keys():
+            if self.recoApplications[recoApp]["app"].isRunning():
+                self.recoApplications[recoApp]["app"].stopApp()
+
+        self.socket.emit('runningApp', {"name": "", "step": "", "pid": 0, "time": 0})
+
+        return
+
+

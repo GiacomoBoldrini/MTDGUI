@@ -10,6 +10,7 @@ class GuiController:
         self.dbman = dbman
         self.currentState = "None"
         self.msg = ""
+        self.run_status = 0
         self.states = {
             "None": 0,
             "Initialize": 1 ,
@@ -35,8 +36,8 @@ class GuiController:
     # Receive actions from Gui and do things
 
 
-    def updateState(self, status):
-        self.socket.emit('updateTheState', {"state": status})
+    def updateState(self, status, msg):
+        self.socket.emit('updateTheState', {"state": status, "msg": msg})
         return
     
     def initialize(self):
@@ -103,7 +104,7 @@ class GuiController:
         if "Run" in self.routes[self.currentState] :
             self.currentState = "Run"
             self.lastMessage = "Run ..."
-            self.updateState(self.states[self.currentState])
+            self.updateState(self.states[self.currentState], "Run")
 
             """
             try:
@@ -115,14 +116,20 @@ class GuiController:
 
             """
             #try:
-            execution, run_status = self.AppC.threadRun()
+            print("Before running: {}".format(self.currentState))
+            execution, run_status = self.AppC.runAllApps()
             self.run_status = run_status
+            print("After running: {}".format(self.currentState))
+
+            # check if execution was successfull
             #after execution we can set the state to stop if successfull
-            self.stop()
             if not execution:
                 self.currentState = "Error"
                 self.lastMessage = "An error appeared while Run"
 
+            else:
+                self.stop()
+            
             return self.states[self.currentState], self.lastMessage
             # do somthing...
             # except:
@@ -133,8 +140,10 @@ class GuiController:
             #     else:
             #         raise Exception("Error")
             
-
+            print( self.states[self.currentState], self.lastMessage)
+            return self.states[self.currentState], self.lastMessage
         else:
+            print("AAAAAAAAAAAAAAAAAH FREGATO")
             self.lastMessage = "Transition not allowed!"
             return self.states[self.currentState], self.lastMessage
         
@@ -185,19 +194,27 @@ class GuiController:
         
     def stop(self):
         print("[RunControl][pause] Stop action begin")
+        print(self.currentState)
         # can we go ininitialize?
+        print("HEY ITS STOPPPPPPPPPP")
         if "Stop" in self.routes[self.currentState] :
             self.currentState = "Stop"
             self.lastMessage = "Stop ..."
-            self.updateState(self.states[self.currentState])
+            self.updateState(self.states[self.currentState], "Stop")
+            
             try:
                 print("Stop ... ")
+                self.AppC.stopAllApps()
                 #saving run on db
-                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState]})
+                print("Before posting")
+                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState], "recostep": self.run_status})
+                print("after posting")
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
                 if "Error" in self.routes[self.currentState] :
+                    print("hey goloso")
+                    print(self.currentState)
                     self.currentState = "Error"
                     self.lastMessage = "An error appeared while Stop"
                     return self.states[self.currentState], self.lastMessage

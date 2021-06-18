@@ -2,7 +2,7 @@
   <div class="hello">
     <div class="title">
       <h1>Run Registry</h1>
-      <hr>
+      <hr />
       <section class="fetch-button">
         <button
           type="button"
@@ -23,6 +23,7 @@
                       <th>Number</th>
                       <th>Date</th>
                       <th>Status</th>
+                      <th>Reco</th>
                       <th>Service Key</th>
                       <th>Run Key</th>
                       <th>Action</th>
@@ -51,7 +52,10 @@
                           </b-button-group>
                         </div>
                       </td>
-                      <td width="30%" class="action-col">
+                      <td width="15%" class="action-col">
+                        {{ run.recostep }}
+                      </td>
+                      <td width="15%" class="action-col">
                         {{ run.configuration.service.name }}
                       </td>
                       <td width="20%" class="action-col">
@@ -143,7 +147,7 @@ a {
 }
 
 .fetch-button {
-    padding: 2%;
+  padding: 2%;
 }
 
 .table-wrap {
