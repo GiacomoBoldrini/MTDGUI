@@ -32,7 +32,7 @@
             </tbody>
           </table>
           <hr />
-          <div>
+          <div class = "theLog">
             <b-card no-body>
               <b-tabs card>
                 <b-tab title="Log" active>
@@ -423,6 +423,7 @@ export default {
       console.log(this.apps);
     });
 
+    this.updateRestart();
     this.get_services_from_db();
     this.get_run_from_db();
   },
@@ -597,6 +598,10 @@ button:hover {
     height: 100%;
     display: block;
     border-collapse: collapse;
+  }
+
+  .theLog {
+    display: None;
   }
 }
 </style>

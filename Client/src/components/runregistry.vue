@@ -26,7 +26,7 @@
                       <th>Reco</th>
                       <th>Service Key</th>
                       <th>Run Key</th>
-                      <th>Action</th>
+                      <!-- <th>Action</th> -->
                     </tr>
                   </thead>
                   <tbody>
@@ -53,7 +53,18 @@
                         </div>
                       </td>
                       <td width="15%" class="action-col">
-                        {{ run.recostep }}
+                        <div class="status">
+                          <b-button-group size="sm" class="stats">
+                            <b-button
+                              class="PrimaryButtons reco"
+                              v-for="action in run.reco.slice(0, -1)"
+                              :key="action.step"
+                              :disabled="statDisable(1, action.value)"
+                              @click="sendRecoAgain(action.step, action.value)"
+                              >{{ action.step }}</b-button
+                            >
+                          </b-button-group>
+                        </div>
                       </td>
                       <td width="15%" class="action-col">
                         {{ run.configuration.service.name }}
@@ -61,11 +72,11 @@
                       <td width="20%" class="action-col">
                         {{ run.configuration.runkey.name }}
                       </td>
-                      <td width="10%" class="action-col">
+                      <!-- <td width="10%" class="action-col">
                         <button type="button" class="btn btn-primary">
                           Inspect
                         </button>
-                      </td>
+                      </td> -->
                     </tr>
                   </tbody>
                 </table>
@@ -94,7 +105,7 @@ export default {
         { actionName: "Pause", value: 4 },
         { actionName: "Resume", value: 5 },
         { actionName: "Stop", value: 6 },
-        { actionName: "Error", value: 7 },
+        { actionName: "Error", value: 0 },
       ],
     };
   },
@@ -115,6 +126,9 @@ export default {
     },
     statDisable(idx, status) {
       return status >= idx;
+    },
+    sendRecoAgain(step, value) {
+      console.log(step, value);
     },
   },
   mounted() {
@@ -207,7 +221,6 @@ a {
 }
 
 .PrimaryButtons {
-  pointer-events: none;
   border: 1px solid #556b2f;
   background-color: #be1616;
   color: white;
@@ -219,4 +232,22 @@ a {
   background-color: #228b22;
   color: white;
 }
+
+.PrimaryButtons:hover {
+  border: 1px solid #920000;
+  background-color: #920000;
+  color: white;
+}
+
+.PrimaryButtons:disabled.reco {
+  border: 1px solid #556b2f;
+  background-color: #2d5fbb;
+  color: white;
+}
+.PrimaryButtons.reco {
+  border: 1px solid #556b2f;
+  background-color: #b97822;
+  color: white;
+}
+
 </style>

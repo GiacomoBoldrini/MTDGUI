@@ -22,6 +22,7 @@ Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 Vue.use(BootstrapVueIcons);
 
+
 // const socket = io("http://127.0.0.1:5000/");
 // Vue.use(VueSocketIOExt, socket);
 

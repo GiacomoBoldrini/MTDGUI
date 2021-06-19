@@ -23,14 +23,16 @@ class AppController:
             "Initialize": 1 ,
             "Configure": 2 ,
             "Data": 3,
-            #"Convert": 4,
-            "Step1": 4,
-            "Step2": 5,
-            "Step3": 6,
-            "Error": 7,
+            "Convert": 4,
+            "Step1": 5,
+            "Step2": 6,
+            "Step3": 7,
+            "Error": 8,
         }
 
         self.currentState = "Initialize"
+
+        self.runStates = {i:0 for i in self.states.keys()}
 
 
     #needed in case you want to run again some recontrusction or such 
@@ -143,6 +145,9 @@ class AppController:
         self.socket.emit('queryApps', {"apps": to_gui})
 
 
+        self.runStates["Configure"] = 1
+
+
         return parsingOk 
 
 
@@ -162,6 +167,7 @@ class AppController:
 
 
         print("[AppControl] Initialized all Apps ... Ready to run")
+        self.runStates["Initialize"] = 1
 
         return
 
@@ -181,8 +187,14 @@ class AppController:
                         time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                         self.socket.emit('runningApp', {"name": self.dataApplications[key]["name"], "step": key, "pid": self.dataApplications[key]["app"].pid, "time": time})
                         self.socket.sleep(1)
+
                     #here the app finished 
+                    #check for unsuccessful exit code of a process
+                    if not self.dataApplications[key]["app"].successful:
+                        return 0, self.currentState
+
                     print("[AppControl] App finished running")
+                    self.runStates[key] = 1
 
                 else:
                     print("[AppControl] Info: Skipping app {}".format(key))
@@ -200,8 +212,14 @@ class AppController:
                         time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                         self.socket.emit('runningApp', {"name": self.recoApplications[key]["name"], "step": key, "pid": self.recoApplications[key]["app"].pid, "time": time})
                         self.socket.sleep(1)
+
                     #here the app finished 
+                    #check for unsuccessful exit code of a process
+                    if not self.recoApplications[key]["app"].successful:
+                        return 0, self.currentState
+
                     print("[AppControl] App finished running, updating status")
+                    self.runStates[key] = 1
                 else:
                     print("[AppControl] Info: Skipping app {}".format(key))
             except:
@@ -210,16 +228,10 @@ class AppController:
         return 1, self.currentState
 
 
-        #returnin a nice message if everything is ok
-        #print("final: ", self.currentState)
-        #return 1, self.currentState
-
-
     def threadRun(self):
 
         tf = threading.Thread(target=self.runAllApps)
         tf.start()
-        print("Waiting for thread to end")
         tf.join() 
 
         return 1, "Step3"
@@ -241,3 +253,15 @@ class AppController:
         return
 
 
+    def reset(self):
+        #stop running apps
+        self.stopAllApps()
+
+        self.service = {}
+        self.dataApplications = {}
+        self.recoApplications = {}
+        self.pids = {}
+        self.appObj = {}
+        self.currentState = "Initialize"
+
+        self.runStates = {i:0 for i in self.states.keys()}

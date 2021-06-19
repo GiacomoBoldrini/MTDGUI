@@ -44,9 +44,14 @@ class TemplateThreadApp(threading.Thread):
                 print("Il pid della nuova app che ho lanciato: {}".format(self.process.pid))
                 self.process.wait() # wait until this step is completed
 
+                self.successful = not self.process.returncode #return 0 is succesfull, 1 not successfull so invert logic
+                #self.successful = True
+                if not self.successful:
+                    print("[Template] Running  NOT ok... breaking")
+                    break #do not run any more 
+
             print("Running went ok...")
 
-        print("Ciao scemo sono gia qui")
         self.run_event.clear() # at this point the comand should be completed
         return 
 

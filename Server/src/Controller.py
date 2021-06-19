@@ -124,24 +124,16 @@ class GuiController:
             # check if execution was successfull
             #after execution we can set the state to stop if successfull
             if not execution:
-                self.currentState = "Error"
-                self.lastMessage = "An error appeared while Run"
+                print("Hey è successo qualcosa....")
+                self.error()
+                self.updateState(self.states[self.currentState], "Error")
 
             else:
                 self.stop()
             
+            print("Ritorno: {} {}".format(self.currentState,self.states[self.currentState] ))
             return self.states[self.currentState], self.lastMessage
-            # do somthing...
-            # except:
-            #     if "Error" in self.routes[self.currentState] :
-            #         self.currentState = "Error"
-            #         self.lastMessage = "An error appeared while Run"
-            #         return self.states[self.currentState], self.lastMessage
-            #     else:
-            #         raise Exception("Error")
             
-            print( self.states[self.currentState], self.lastMessage)
-            return self.states[self.currentState], self.lastMessage
         else:
             print("AAAAAAAAAAAAAAAAAH FREGATO")
             self.lastMessage = "Transition not allowed!"
@@ -196,7 +188,6 @@ class GuiController:
         print("[RunControl][pause] Stop action begin")
         print(self.currentState)
         # can we go ininitialize?
-        print("HEY ITS STOPPPPPPPPPP")
         if "Stop" in self.routes[self.currentState] :
             self.currentState = "Stop"
             self.lastMessage = "Stop ..."
@@ -206,9 +197,7 @@ class GuiController:
                 print("Stop ... ")
                 self.AppC.stopAllApps()
                 #saving run on db
-                print("Before posting")
-                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState], "recostep": self.run_status})
-                print("after posting")
+                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState], "reco": [{"step": i[0], "value" : i[1] } for i in self.AppC.runStates.items()]})
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
@@ -227,6 +216,7 @@ class GuiController:
         
     def restart(self):
         print("[RunControl][restart] Restart action begin")
+        self.AppC.reset()
         self.currentState = "None"
         self.lastMessage = "Restarting the app"
         return self.states[self.currentState], self.lastMessage
@@ -240,9 +230,11 @@ class GuiController:
                 print("Error ... ")
                 # Post configuration to run  registry before changing state so one knows 
                 # At which point an error has been fired
-                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState]})
+                self.AppC.stopAllApps()
+                self.dbman.PostRunReg({"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "configuration": self.configuration, "status": self.states[self.currentState], "reco": [{"step": i[0], "value" : i[1] } for i in self.AppC.runStates.items()]})
                 self.currentState = "Error"
                 self.lastMessage = "Error ..."
+                print("sono qui")
                 return self.states[self.currentState], self.lastMessage
                 # do somthing...
             except:
